@@ -23,6 +23,11 @@ SPARK_SPLITS = [0.0, 2**10, 2**15, 2**18, 2**20, 2**22, 2**23, 2**24]
 SPARK_LEN = 8
 
 
+async def pipeWriter(pipe, data):
+    with open(pipe, 'wt') as p:
+        p.write(f'{data}\n')
+
+
 async def getLinkInfo():
     proc = await asyncio.create_subprocess_shell(LINK_INFO,
                                                  stdout=asyncio.subprocess.PIPE,
@@ -72,61 +77,42 @@ def lineFormatter(dataBuffer, linkInfo):
 
 
 async def processMonitor(stdout, writer):
-    header = await stdout.readline()
-    logging.info(f'header: {header}')
-
+    _ = await stdout.readline()
     dataBuffer = []
-    try:
-        async for line in stdout:
-            if b'Error' in line:
-                logging.info(f'vnstat exited: {line}')
-                return
+    async for line in stdout:
+        if b'Error' in line:
+            logging.info(f'vnstat exited: {line}')
+            return
 
-            info, error = await getLinkInfo()
-            if error:
-                logging.info(f'link error: {error}')
-                return
+        info, error = await getLinkInfo()
+        if error:
+            logging.info(f'link error: {error}')
+            return
 
-            data = line.decode('utf-8').rstrip('\n')
-            dataBuffer.append(json.loads(data))
-            dataBuffer = dataBuffer[-SPARK_LEN:]
-            logging.info(f'process: {dataBuffer[-1]}')
-
-            await writer(lineFormatter(dataBuffer, linkFormatter(info)))
-
-    except asyncio.CancelledError:
-        logging.info('monitor cancelled')
+        data = line.decode('utf-8').rstrip('\n')
+        dataBuffer.append(json.loads(data))
+        dataBuffer = dataBuffer[-SPARK_LEN:]
+        logging.debug(f'{dataBuffer[-1]}')
+        await writer(lineFormatter(dataBuffer, linkFormatter(info)))
 
 
-async def startMonitoring(command, writer):
-    proc = await asyncio.create_subprocess_shell(
-        command,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.STDOUT,
-    )
-    monitorTask = createTask(processMonitor(proc.stdout, writer), 'procMon')
-    await asyncio.gather(monitorTask, return_exceptions=True)
-
-
-async def runner(writer):
+async def runner(pipe):
     try:
         while True:
             info, error = await getLinkInfo()
             if error:
-                await writer(error)
+                await pipeWriter(pipe, error)
             else:
-                logging.info('start monitoring')
-                await startMonitoring(STATS_CMD, writer)
+                proc = await asyncio.create_subprocess_shell(
+                    STATS_CMD,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.STDOUT,
+                )
+                monitorTask = createTask(
+                    processMonitor(proc.stdout, partial(pipeWriter, pipe)),
+                    'monitor')
+                await monitorTask
             await asyncio.sleep(1)
     except asyncio.CancelledError:
-        await writer('monitor exited')
-
-
-async def pipeWriter(pipe, data):
-    with open(pipe, 'wt') as p:
-        p.write(f'{data}\n')
-
-
-async def run(pipe):
-    runnerTask = createTask(runner(partial(pipeWriter, pipe)), 'runner')
-    await runnerTask
+        logging.info('caught runner cancellation')
+        await pipeWriter(pipe, 'vnstats monitor exited')

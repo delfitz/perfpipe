@@ -50,7 +50,7 @@ def getSparkFormat(level,
     return highlight, spark
 
 
-def getSparkline(levels, hl_splits, spark_splits):
+def getSparkline(levels, hl_splits=HL_SPLITS, spark_splits=SPARK_SPLITS):
     sparkline = ''
     for level in levels:
         color, spark = getSparkFormat(level, hl_splits, spark_splits)
@@ -58,7 +58,11 @@ def getSparkline(levels, hl_splits, spark_splits):
     return f'<fn=1>{sparkline}</fn>'
 
 
-def highlightStat(level, hl_splits, unit, decimals=1, theme=bfc.PALENIGHT):
+def highlightStat(level,
+                  hl_splits=HL_SPLITS,
+                  unit='%',
+                  decimals=1,
+                  theme=bfc.PALENIGHT):
     label = f'{level:.{decimals}f}<fn=1>{unit}</fn>'
     return f'<fc={getHighlight(level, hl_splits)}>{label}</fc>'
 

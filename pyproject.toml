@@ -15,7 +15,7 @@ dynamic  = ['version']
 
 
 [project.scripts]
- perfpipe = 'command:parseArgs'
+ perfpipe = 'command:setup'
 
-[tools.setuptools-git-versioning]
+[tool.setuptools-git-versioning]
 enabled = true

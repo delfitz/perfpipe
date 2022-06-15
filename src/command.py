@@ -5,16 +5,21 @@ from functools import partial
 from utils.logger import logConfig
 from utils.asyncUtils import asyncRunner
 
+import stats.mpstats as mpstats
 import stats.vnstats as vnstats
-# import stats.asyncPipe as asyncPipe
 
 
 def testProxy(args):
     pass
 
 
+def mpstatsProxy(args):
+    asyncRunner(mpstats.runner, args.pipe)
+    logging.info('exited mpstats')
+
+
 def vnstatsProxy(args):
-    asyncRunner(partial(vnstats.run, args.pipe))
+    asyncRunner(partial(vnstats.runner, args.pipe))
     logging.info('exited vnstats')
 
 
@@ -25,6 +30,10 @@ def parseArgs():
     vnstats_parser = subparsers.add_parser('vnstats')
     vnstats_parser.add_argument('--pipe', default=True)
     vnstats_parser.set_defaults(func=vnstatsProxy)
+
+    mpstats_parser = subparsers.add_parser('mpstats')
+    mpstats_parser.add_argument('--pipe', default=True)
+    mpstats_parser.set_defaults(func=mpstatsProxy)
 
     test_parser = subparsers.add_parser('test')
     test_parser.add_argument('--pipe', default=True)
