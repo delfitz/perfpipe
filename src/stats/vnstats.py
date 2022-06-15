@@ -62,9 +62,9 @@ def linkFormatter(info):
 
 def rateFormatter(rate):
     if rate < 1e6:
-        rateFormat = highlightStat(rate * 1e-3, HL_SPLITS, 'kB/s')
+        rateFormat = highlightStat(rate * 1e-3, HL_SPLITS, unit='kB/s')
     else:
-        rateFormat = highlightStat(rate * 1e-6, HL_SPLITS, 'MB/s')
+        rateFormat = highlightStat(rate * 1e-6, HL_SPLITS, unit='MB/s')
     return rateFormat
 
 
