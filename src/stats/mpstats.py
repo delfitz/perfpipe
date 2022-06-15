@@ -33,8 +33,8 @@ async def getSensors():
 async def lineFormatter(data):
     cpus = [100. - float(usage) for _, usage in data[1:]]
     cpuTemp, cpuFan = await getSensors()
-    tempLabel = f'{getIcon("", False)}{highlightStat(cpuTemp,TEMP_SPLITS, "°C")}'
-    fanLabel = f'{getIcon("", False)}{highlightStat(cpuFan,FAN_SPLITS, "rpm", decimals=0)}'
+    tempLabel = f'{getIcon("", False)}{highlightStat(cpuTemp, TEMP_SPLITS, unit="°C")}'
+    fanLabel = f'{getIcon("", False)}{highlightStat(cpuFan, FAN_SPLITS, unit="rpm", decimals=0)}'
     allCpuLabel = highlightStat(cpus[0])
     mpSparkline = getSparkline(cpus[1:])
     cpuIcon = getIcon('')
