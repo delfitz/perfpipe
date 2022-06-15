@@ -60,11 +60,13 @@ def getSparkline(levels, hl_splits=HL_SPLITS, spark_splits=SPARK_SPLITS):
 
 def highlightStat(level,
                   hl_splits=HL_SPLITS,
+                  label=None,
                   unit='%',
                   decimals=1,
                   theme=bfc.PALENIGHT):
-    label = f'{level:.{decimals}f}<fn=1>{unit}</fn>'
-    return f'<fc={getHighlight(level, hl_splits)}>{label}</fc>'
+    statLabel = f'{label} ' if label else ''
+    statLine = f'{statLabel}{level:.{decimals}f}<fn=1>{unit}</fn>'
+    return f'<fc={getHighlight(level, hl_splits)}>{statLine}</fc>'
 
 
 def highlightLabel(label, highlight=HL_NORMAL, theme=bfc.PALENIGHT):

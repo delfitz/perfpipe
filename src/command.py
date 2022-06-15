@@ -6,11 +6,17 @@ from utils.logger import logConfig
 from utils.asyncUtils import asyncRunner
 
 import stats.mpstats as mpstats
+import stats.cpuprocs as cpuprocs
 import stats.vnstats as vnstats
 
 
 def testProxy(args):
     pass
+
+
+def cpuprocsProxy(args):
+    asyncRunner(cpuprocs.runner, args.pipe)
+    logging.info('exited cpuprocs')
 
 
 def mpstatsProxy(args):
@@ -30,6 +36,10 @@ def parseArgs():
     vnstats_parser = subparsers.add_parser('vnstats')
     vnstats_parser.add_argument('--pipe', default=True)
     vnstats_parser.set_defaults(func=vnstatsProxy)
+
+    cpuprocs_parser = subparsers.add_parser('cpuprocs')
+    cpuprocs_parser.add_argument('--pipe', default=True)
+    cpuprocs_parser.set_defaults(func=cpuprocsProxy)
 
     mpstats_parser = subparsers.add_parser('mpstats')
     mpstats_parser.add_argument('--pipe', default=True)
