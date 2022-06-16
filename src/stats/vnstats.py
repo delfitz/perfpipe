@@ -56,7 +56,7 @@ def linkFormatter(info):
 
     ssid = highlightLabel(status[LINK_SSID])
     level, unit = status[LINK_SIGNAL].split()
-    signal = highlightStat(int(level), LINK_SPLITS, unit, decimals=0)
+    signal = highlightStat(int(level), LINK_SPLITS, unit=unit, decimals=0)
     return f'{signal} {ssid}'
 
 
