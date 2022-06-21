@@ -33,7 +33,6 @@ LOCS = [
 EXCLUDE = 'exclude'
 UNITS = 'units'
 APPID = 'appid'
-API_KEY = ''
 
 EXCLUDES = 'minutely,daily,alerts'
 METRIC = 'metric'
@@ -49,13 +48,13 @@ def getLocation(location):
         return locs[HOME]
 
 
-def getPayload(loc):
+def getPayload(loc, apiKey):
     return {
         LAT: loc[LAT],
         LON: loc[LON],
         EXCLUDE: EXCLUDES,
         UNITS: METRIC,
-        APPID: API_KEY
+        APPID: apiKey
     }
 
 
@@ -153,11 +152,14 @@ async def getWeather(session, loc, payload):
     except aiohttp.ClientConnectionError:
         logging.info('connection error')
         return None
+    except Exception as e:
+        logging.info(f'uncaught: {e}')
+        return None
 
 
-async def runner(pipe, location):
+async def runner(pipe, location, apiKey):
     loc = getLocation(location)
-    payload = getPayload(loc)
+    payload = getPayload(loc, apiKey)
     logging.info(loc, payload)
     try:
         while True:

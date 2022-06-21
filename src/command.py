@@ -1,5 +1,6 @@
 import logging
 import argparse
+import os
 from functools import partial
 
 from utils.logger import logConfig
@@ -22,7 +23,15 @@ def clockProxy(args):
 
 
 def weatherProxy(args):
-    asyncRunner(weather.runner, args.pipe, args.location)
+    if not args.key:
+        apiKey = os.getenv('WEATHER')
+        if not apiKey:
+            logging.info('no api key found')
+            return
+    else:
+        apiKey = args.key
+    logging.info(f'apikey: {apiKey}')
+    asyncRunner(weather.runner, args.pipe, args.location, apiKey)
     logging.info('exited weather')
 
 
@@ -52,10 +61,11 @@ def parseArgs():
     parser = argparse.ArgumentParser(prog='command')
     subparsers = parser.add_subparsers()
 
-    clock_parser = addSubparser(subparsers, 'clock', clockProxy)
+    addSubparser(subparsers, 'clock', clockProxy)
 
     weather_parser = addSubparser(subparsers, 'weather', weatherProxy)
     weather_parser.add_argument('--location', default=None)
+    weather_parser.add_argument('--key', default=None)
 
     vnstats_parser = subparsers.add_parser('vnstats')
     vnstats_parser.add_argument('--pipe', default=True)
