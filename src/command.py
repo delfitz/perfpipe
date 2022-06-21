@@ -5,6 +5,8 @@ from functools import partial
 from utils.logger import logConfig
 from utils.asyncUtils import asyncRunner
 
+import stats.clock as clock
+import stats.weather as weather
 import stats.mpstats as mpstats
 import stats.cpuprocs as cpuprocs
 import stats.vnstats as vnstats
@@ -12,6 +14,16 @@ import stats.vnstats as vnstats
 
 def testProxy(args):
     pass
+
+
+def clockProxy(args):
+    asyncRunner(clock.runner, args.pipe)
+    logging.info('exited clock')
+
+
+def weatherProxy(args):
+    asyncRunner(weather.runner, args.pipe, args.location)
+    logging.info('exited weather')
 
 
 def cpuprocsProxy(args):
@@ -29,9 +41,21 @@ def vnstatsProxy(args):
     logging.info('exited vnstats')
 
 
+def addSubparser(subparsers, name, proxy):
+    sub = subparsers.add_parser(name)
+    sub.add_argument('--pipe', default=None)
+    sub.set_defaults(func=proxy)
+    return sub
+
+
 def parseArgs():
     parser = argparse.ArgumentParser(prog='command')
     subparsers = parser.add_subparsers()
+
+    clock_parser = addSubparser(subparsers, 'clock', clockProxy)
+
+    weather_parser = addSubparser(subparsers, 'weather', weatherProxy)
+    weather_parser.add_argument('--location', default=None)
 
     vnstats_parser = subparsers.add_parser('vnstats')
     vnstats_parser.add_argument('--pipe', default=True)

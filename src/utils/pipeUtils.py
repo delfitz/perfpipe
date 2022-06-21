@@ -8,8 +8,12 @@ BUFFER_LEN = 10
 
 
 async def pipeWriter(pipe, data):
-    with open(pipe, 'wt') as p:
-        p.write(f'{data}\n')
+    if pipe:
+        with open(pipe, 'wt') as p:
+            logging.info('writing to pipe')
+            p.write(f'{data}\n')
+    else:
+        logging.info(f'no pipe: {data}')
 
 
 def parseTable(table, cols):

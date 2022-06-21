@@ -1,4 +1,8 @@
+import logging
 import utils.base16Colors as bfc
+
+HL_LABEL = bfc.BASE0D
+HL_ICON = bfc.BASE0C
 
 HL_INACTIVE = bfc.BASE01
 HL_LOW = bfc.BASE03
@@ -58,6 +62,33 @@ def getSparkline(levels, hl_splits=HL_SPLITS, spark_splits=SPARK_SPLITS):
     return f'<fn=1>{sparkline}</fn>'
 
 
+def formatClock(dt, icon):
+    timeLabel = f'{dt:%-I:%M}<fn=1>{dt:%p}</fn>'
+    iconLabel = f' <fn=8><fc={getColor(HL_ICON)}>{icon}</fc></fn>  '
+    dateLabel = f'{dt:%A, %B %-d}'
+    clockLabel = f'{timeLabel} {iconLabel} {dateLabel}'
+    # formatted = f'g9qQ hijk'
+    formatted = f'<fn=2><fc={getColor(HL_LABEL)}>{clockLabel}</fc></fn>'
+    logging.info(formatted)
+    return formatted
+
+
+def highlightWeather(temp,
+                     icon=None,
+                     date=None,
+                     unit=None,
+                     hl_splits=HL_SPLITS,
+                     theme=bfc.PALENIGHT):
+    tempFont = 2 if date else 3
+    iconFont = 6 if date else 7
+
+    hourLabel = f'<fn=1><fc={getColor(HL_LABEL)}>{date:%-I%p}</fc></fn>' if date else ''
+    tempUnit = f'{temp:.0f}'
+    tempLabel = f'<fn={tempFont}><fc={getHighlight(temp, hl_splits)}>{tempUnit}</fc></fn>'
+    iconLabel = f'<fn={iconFont}><fc={getColor(HL_ICON)}>{icon}</fc></fn>'
+    return f'{tempLabel}{iconLabel}{hourLabel}'
+
+
 def highlightStat(level,
                   hl_splits=HL_SPLITS,
                   label=None,
@@ -71,6 +102,10 @@ def highlightStat(level,
 
 def highlightLabel(label, highlight=HL_NORMAL, theme=bfc.PALENIGHT):
     return f'<fc={getColor(highlight)}>{label}</fc>'
+
+
+def getLabel(label, large=True):
+    return f'<fn={3 if large else 2}><fc={getColor(HL_LABEL)}>{label}</fc></fn>'
 
 
 def getBox(label, theme=bfc.PALENIGHT):
