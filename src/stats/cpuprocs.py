@@ -1,14 +1,14 @@
 import logging
-import json
 import asyncio
 
-# from utils.asyncUtils import createTask
 from utils.pipeUtils import processRunner, pipeWriter
-from utils.formatting import highlightStat, getBox
+from utils.formatting import formatStat, getBox
 
 STATS_CMD = 'pidstat -u 2'
 STATS_COLS = [8, 6]
 STATS_PIPE = '/tmp/cpuprocs-pipe'
+
+PROC_ICON = ''
 
 
 async def lineFormatter(data):
@@ -18,8 +18,8 @@ async def lineFormatter(data):
 
     procLine = ''
     for proc in procs[:3]:
-        procLabel = f'{highlightStat(proc[1], label=proc[0])}'
-        procLine += getBox(procLabel)
+        procLabel = f'{formatStat(proc[1], label=proc[0], icon=PROC_ICON)}  '
+        procLine += procLabel
     return procLine
 
 

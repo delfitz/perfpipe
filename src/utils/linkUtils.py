@@ -1,6 +1,5 @@
-import asyncio
-
-from utils.formatting import highlightStat, highlightLabel
+from utils.pipeUtils import processCommand
+from utils.formatting import formatStat, formatLabel
 
 LINK_INFO = 'iw dev wlan0 link'
 LINK_SSID = 'SSID'
@@ -10,10 +9,7 @@ LINK_SPLITS = [-40, -65, -80, -90, -95]
 
 
 async def getLinkInfo():
-    proc = await asyncio.create_subprocess_shell(LINK_INFO,
-                                                 stdout=asyncio.subprocess.PIPE,
-                                                 stderr=asyncio.subprocess.PIPE)
-    stdout, stderr = await proc.communicate()
+    stdout, stderr = await processCommand(LINK_INFO)
     if stderr:
         return None, 'no wifi link'
     elif b'Not connected' in stdout:
@@ -35,7 +31,11 @@ def linkFormatter(info):
             elif param == LINK_SIGNAL:
                 status[LINK_SIGNAL] = value
 
-    ssid = highlightLabel(status[LINK_SSID])
+    ssid = formatLabel(status[LINK_SSID])
     level, unit = status[LINK_SIGNAL].split()
-    signal = highlightStat(int(level), LINK_SPLITS, unit=unit, decimals=0)
+    signal = formatStat(int(level),
+                        unit=unit,
+                        decimals=0,
+                        highlight=True,
+                        hl_splits=LINK_SPLITS)
     return f'{signal} {ssid}'

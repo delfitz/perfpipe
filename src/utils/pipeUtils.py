@@ -10,10 +10,17 @@ BUFFER_LEN = 10
 async def pipeWriter(pipe, data):
     if pipe:
         with open(pipe, 'wt') as p:
-            logging.info('writing to pipe')
             p.write(f'{data}\n')
     else:
         logging.info(f'no pipe: {data}')
+
+
+async def processCommand(cmd):
+    proc = await asyncio.create_subprocess_shell(cmd,
+                                                 stdout=asyncio.subprocess.PIPE,
+                                                 stderr=asyncio.subprocess.PIPE)
+    stdout, stderr = await proc.communicate()
+    return stdout, stderr
 
 
 def parseTable(table, cols):

@@ -3,7 +3,7 @@ import aiohttp
 import asyncio
 
 from datetime import datetime
-from utils.formatting import highlightWeather, getLabel
+from utils.formatting import formatWeather, formatLabel
 
 from utils.pipeUtils import pipeWriter
 from utils.linkUtils import getLinkInfo
@@ -109,9 +109,9 @@ def parseForecast(data, minutely=False):
 
 def getCurrent(data):
     current = parseForecast(data['current'])
-    return highlightWeather(current['temp'],
-                            icon=current['icon'],
-                            hl_splits=HL_SPLITS)
+    return formatWeather(current['temp'],
+                         icon=current['icon'],
+                         hl_splits=HL_SPLITS)
 
 
 def getHourly(data, hours=24):
@@ -133,10 +133,10 @@ def getHourlyCollapsed(data, numDeltas=4):
         elif abs(hourly['temp'] - test['temp']) > 1.9:
             deltas.append(hourly)
     return [
-        highlightWeather(delta['temp'],
-                         icon=delta['icon'],
-                         date=delta['date'],
-                         hl_splits=HL_SPLITS) for delta in deltas
+        formatWeather(delta['temp'],
+                      icon=delta['icon'],
+                      date=delta['date'],
+                      hl_splits=HL_SPLITS) for delta in deltas
     ]
 
 
@@ -148,7 +148,7 @@ async def getWeather(session, loc, payload):
             hourly = getHourly(forecasts)
             collapsed = getHourlyCollapsed(forecasts)
             logging.debug(f'hourly: {" ".join(hourly[1:])}')
-            return f'{getLabel(loc[DESC], False)} {current}  {" ".join(collapsed[:5])}'
+            return f'{formatLabel(loc[DESC], False)} {current}  {" ".join(collapsed[:5])}'
     except aiohttp.ClientConnectionError:
         logging.info('connection error')
         return None

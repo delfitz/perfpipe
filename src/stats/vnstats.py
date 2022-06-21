@@ -4,7 +4,10 @@ import asyncio
 from functools import partial
 
 from utils.asyncUtils import createTask
-from utils.formatting import getSparkline, highlightStat, highlightLabel, getIcon
+from utils.pipeUtils import pipeWriter
+from utils.linkUtils import getLinkInfo, linkFormatter
+from utils.formatting import formatStat, getIcon
+from utils.sparkUtils import getSparkline
 
 STATS_CMD = 'vnstat --live --json'
 STATS_PIPE = '/tmp/vnstats-pipe'
@@ -22,57 +25,24 @@ HL_SPLITS = [0, 2**10, 2**20, 2**23, 2**25]
 SPARK_SPLITS = [0.0, 2**10, 2**15, 2**18, 2**20, 2**22, 2**23, 2**24]
 SPARK_LEN = 8
 
-
-async def pipeWriter(pipe, data):
-    with open(pipe, 'wt') as p:
-        p.write(f'{data}\n')
+RX_ICON = ''
+TX_ICON = ''
 
 
-async def getLinkInfo():
-    proc = await asyncio.create_subprocess_shell(LINK_INFO,
-                                                 stdout=asyncio.subprocess.PIPE,
-                                                 stderr=asyncio.subprocess.PIPE)
-    stdout, stderr = await proc.communicate()
-    if stderr:
-        return None, 'no wifi link'
-    elif b'Not connected' in stdout:
-        return None, 'no connection'
-    else:
-        return stdout, None
-
-
-def linkFormatter(info):
-    status = {}
-    lines = info.decode('utf-8').split('\n')
-    for line in lines[1:]:
-        if line:
-            param, value = [x.strip() for x in line.split(':')]
-            if param == LINK_SSID:
-                status[LINK_SSID] = value
-            elif param == LINK_FREQ:
-                status[LINK_FREQ] = value
-            elif param == LINK_SIGNAL:
-                status[LINK_SIGNAL] = value
-
-    ssid = highlightLabel(status[LINK_SSID])
-    level, unit = status[LINK_SIGNAL].split()
-    signal = highlightStat(int(level), LINK_SPLITS, unit=unit, decimals=0)
-    return f'{signal} {ssid}'
-
-
-def rateFormatter(rate):
-    if rate < 1e6:
-        rateFormat = highlightStat(rate * 1e-3, HL_SPLITS, unit='kB/s')
-    else:
-        rateFormat = highlightStat(rate * 1e-6, HL_SPLITS, unit='MB/s')
-    return rateFormat
+def rateFormatter(rate, icon):
+    unit = 'kB/s' if rate < 1e6 else 'GB/s'
+    return formatStat(rate * 1e-3,
+                      unit=unit,
+                      highlight=True,
+                      hl_splits=HL_SPLITS,
+                      icon=icon)
 
 
 def lineFormatter(dataBuffer, linkInfo):
     rates = [(data[RX][RATE], data[TX][RATE]) for data in dataBuffer]
+    rxLabel = rateFormatter(rates[-1][0], RX_ICON)
+    txLabel = rateFormatter(rates[-1][1], TX_ICON)
     rxSparkline = getSparkline([rx for rx, _ in rates], HL_SPLITS, SPARK_SPLITS)
-    rxLabel = f'{getIcon("", False)}{rateFormatter(rates[-1][0])}'
-    txLabel = f'{getIcon("", False)}{rateFormatter(rates[-1][1])}'
     return f'{rxSparkline} {rxLabel} {txLabel}  {linkInfo}  '
 
 
