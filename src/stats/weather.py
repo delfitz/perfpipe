@@ -33,7 +33,7 @@ LOCS = [
 EXCLUDE = 'exclude'
 UNITS = 'units'
 APPID = 'appid'
-API_KEY = '4a5dad1535c3554d98eb7f6cccccb501'
+API_KEY = ''
 
 EXCLUDES = 'minutely,daily,alerts'
 METRIC = 'metric'
