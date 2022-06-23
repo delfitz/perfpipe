@@ -34,7 +34,7 @@ EXCLUDE = 'exclude'
 UNITS = 'units'
 APPID = 'appid'
 
-EXCLUDES = 'minutely,daily,alerts'
+EXCLUDES = 'daily,alerts'
 METRIC = 'metric'
 HOME = 'nyc'
 
@@ -160,7 +160,6 @@ async def getWeather(session, loc, payload):
 async def runner(pipe, location, apiKey):
     loc = getLocation(location)
     payload = getPayload(loc, apiKey)
-    logging.info(loc, payload)
     try:
         while True:
             _, error = await getLinkInfo()
@@ -169,7 +168,6 @@ async def runner(pipe, location, apiKey):
             else:
                 async with aiohttp.ClientSession(conn_timeout=1) as session:
                     while True:
-                        logging.info('fetching weather')
                         if weather := await getWeather(session, loc, payload):
                             await pipeWriter(pipe, weather)
                             await asyncio.sleep(600)

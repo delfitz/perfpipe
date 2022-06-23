@@ -55,7 +55,6 @@ def formatClock(dt, icon, theme=None):
     dateLabel = f'{dt:%A, %B %-d}'
     clockLabel = f'{timeLabel} {iconLabel} {dateLabel}'
     formatted = f'<fn=2><fc={getColor(HL_LABEL, theme)}>{clockLabel}</fc></fn>'
-    logging.info(formatted)
     return formatted
 
 

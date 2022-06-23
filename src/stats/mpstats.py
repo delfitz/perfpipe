@@ -37,7 +37,6 @@ async def getHostInfo():
     lines = [
         line.lstrip() for line in result.decode('utf-8').split('\n') if line
     ]
-    logging.info(lines)
     info = {line.split(':')[0]: line.split(':')[1].lstrip() for line in lines}
     host = f'{formatLabel(info[HOST_NAME])}'
     kernel = f' {formatLabel(info[HOST_KERNEL].split()[1], sub=True)}'
@@ -77,7 +76,6 @@ async def lineFormatter(hostInfo, data):
 async def runner(pipe):
     try:
         hostInfo = await getHostInfo()
-        logging.info(hostInfo)
         await processRunner(pipe, STATS_CMD, STATS_COLS,
                             partial(lineFormatter, hostInfo))
     except asyncio.CancelledError:
