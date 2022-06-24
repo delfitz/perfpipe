@@ -42,6 +42,7 @@ async def proxyRunner(args):
         logging.info(f'module {args.mod} finished')
     else:
         logConfig(file=f'{PERF_PATH}{PERF_LOG}')
+        logging.info('starting all modules')
         tasks = [
             createTask(MODS[mod](getPipe(mod), **optionals), mod)
             for mod in MODS
