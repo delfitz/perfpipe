@@ -64,5 +64,9 @@ def parseArgs():
         parser.print_help()
 
 
+def setup():
+    parseArgs()
+
+
 if __name__ == '__main__':
     parseArgs()
