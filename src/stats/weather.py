@@ -1,4 +1,6 @@
 import logging
+import os
+
 import aiohttp
 import asyncio
 
@@ -49,6 +51,8 @@ def getLocation(location):
 
 
 def getPayload(loc, apiKey):
+    if not apiKey:
+        apiKey = os.getenv('WEATHER')
     return {
         LAT: loc[LAT],
         LON: loc[LON],
@@ -77,9 +81,9 @@ def getWeatherIcon(icon):
         return icons['night']
     elif icon in ('02d', '03d'):
         return icons['partlyCloudy']
-    elif icon in ('02n', '03n', '04n'):
+    elif icon in ('02n', '03n', '04n', '50n'):
         return icons['cloudyNight']
-    elif icon == '04d':
+    elif icon in ('04d', '50d'):
         return icons['cloudy']
     elif icon in ('09d', '10d', '09n', '10n'):
         return icons['rain']
@@ -88,6 +92,7 @@ def getWeatherIcon(icon):
     elif icon == '13d':
         return icons['snow']
     else:
+        logging.info(f'unknown icon: {icon}')
         return icons['unknown']
 
 
@@ -102,6 +107,7 @@ def parseForecast(data, minutely=False):
         'date': datetime.fromtimestamp(data['dt']),
         'temp': data['temp'],
         'clouds': data['clouds'],
+        'iconId': data['weather'][0]['icon'],
         'icon': getWeatherIcon(data['weather'][0]['icon']),
         'cond': data['weather'][0]['description']
     }
@@ -157,9 +163,9 @@ async def getWeather(session, loc, payload):
         return None
 
 
-async def runner(pipe, location, apiKey):
-    loc = getLocation(location)
-    payload = getPayload(loc, apiKey)
+async def runner(pipe, **kwargs):
+    loc = getLocation(kwargs['loc'] if 'loc' in kwargs else None)
+    payload = getPayload(loc, kwargs['api'] if 'api' in kwargs else None)
     try:
         while True:
             _, error = await getLinkInfo()
@@ -168,6 +174,7 @@ async def runner(pipe, location, apiKey):
             else:
                 async with aiohttp.ClientSession(conn_timeout=1) as session:
                     while True:
+                        logging.info('getting weather')
                         if weather := await getWeather(session, loc, payload):
                             await pipeWriter(pipe, weather)
                             await asyncio.sleep(600)

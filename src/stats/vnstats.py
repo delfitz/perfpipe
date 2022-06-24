@@ -66,7 +66,7 @@ async def processMonitor(stdout, writer):
         await writer(lineFormatter(dataBuffer, linkFormatter(info)))
 
 
-async def runner(pipe):
+async def runner(pipe, **kwargs):
     try:
         while True:
             info, error = await getLinkInfo()

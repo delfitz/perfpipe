@@ -34,9 +34,10 @@ def getClock():
     return line
 
 
-async def runner(pipe):
+async def runner(pipe, **kwargs):
     try:
         while True:
+            logging.info(f'updating clock: {pipe}')
             update = getClock()
             await pipeWriter(pipe, update)
             await asyncio.sleep(60 - datetime.now().second)

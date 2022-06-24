@@ -2,7 +2,7 @@ import logging
 import asyncio
 
 from utils.pipeUtils import processRunner, pipeWriter
-from utils.formatting import formatStat, getBox
+from utils.formatting import formatStat
 
 STATS_CMD = 'pidstat -u 2'
 STATS_COLS = [8, 6]
@@ -23,7 +23,7 @@ async def lineFormatter(data):
     return procLine
 
 
-async def runner(pipe):
+async def runner(pipe, **kwargs):
     try:
         await processRunner(pipe, STATS_CMD, STATS_COLS, lineFormatter)
     except asyncio.CancelledError:

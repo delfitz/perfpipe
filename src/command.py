@@ -1,10 +1,10 @@
 import logging
 import argparse
 import os
-from functools import partial
+import asyncio
 
 from utils.logger import logConfig
-from utils.asyncUtils import asyncRunner
+from utils.asyncUtils import asyncRunner, createTask
 
 import stats.clock as clock
 import stats.weather as weather
@@ -12,89 +12,57 @@ import stats.mpstats as mpstats
 import stats.cpuprocs as cpuprocs
 import stats.vnstats as vnstats
 
+PERF_PATH = '/tmp/perfpipe/'
+PERF_LOG = 'perfpipe.log'
 
-def testProxy(args):
-    pass
+MODS = {
+    'clock': clock.runner,
+    'weather': weather.runner,
+    'vnstats': vnstats.runner,
+    'mpstats': mpstats.runner,
+    'cpuprocs': cpuprocs.runner,
+}
 
 
-def clockProxy(args):
-    asyncRunner(clock.runner, args.pipe)
-    logging.info('exited clock')
+def getPipe(mod):
+    pipe = f'{PERF_PATH}{mod}-pipe'
+    if not os.path.exists(pipe):
+        os.mkfifo(pipe)
+    return pipe
 
 
-def weatherProxy(args):
-    if not args.key:
-        apiKey = os.getenv('WEATHER')
-        if not apiKey:
-            logging.info('no api key found')
-            return
+async def proxyRunner(args):
+    if not os.path.exists(PERF_PATH):
+        os.mkdir(PERF_PATH)
+    optionals = {k: v for k, v in vars(args).items() if v is not None}
+    if args.mod and args.mod in MODS:
+        logConfig()
+        logging.info(f'starting module {args.mod}')
+        await MODS[args.mod](getPipe(args.mod), **optionals)
+        logging.info(f'module {args.mod} finished')
     else:
-        apiKey = args.key
-    logging.info(f'apikey: {apiKey}')
-    asyncRunner(weather.runner, args.pipe, args.location, apiKey)
-    logging.info('exited weather')
-
-
-def cpuprocsProxy(args):
-    asyncRunner(cpuprocs.runner, args.pipe)
-    logging.info('exited cpuprocs')
-
-
-def mpstatsProxy(args):
-    asyncRunner(mpstats.runner, args.pipe)
-    logging.info('exited mpstats')
-
-
-def vnstatsProxy(args):
-    asyncRunner(partial(vnstats.runner, args.pipe))
-    logging.info('exited vnstats')
-
-
-def addSubparser(subparsers, name, proxy):
-    sub = subparsers.add_parser(name)
-    sub.add_argument('--pipe', default=None)
-    sub.set_defaults(func=proxy)
-    return sub
+        logConfig(file=f'{PERF_PATH}{PERF_LOG}')
+        tasks = [
+            createTask(MODS[mod](getPipe(mod), **optionals), mod)
+            for mod in MODS
+        ]
+        await asyncio.gather(*tasks)
+        logging.info('all mods exited')
 
 
 def parseArgs():
     parser = argparse.ArgumentParser(prog='command')
-    subparsers = parser.add_subparsers()
-
-    addSubparser(subparsers, 'clock', clockProxy)
-
-    weather_parser = addSubparser(subparsers, 'weather', weatherProxy)
-    weather_parser.add_argument('--location', default=None)
-    weather_parser.add_argument('--key', default=None)
-
-    vnstats_parser = subparsers.add_parser('vnstats')
-    vnstats_parser.add_argument('--pipe', default=True)
-    vnstats_parser.set_defaults(func=vnstatsProxy)
-
-    cpuprocs_parser = subparsers.add_parser('cpuprocs')
-    cpuprocs_parser.add_argument('--pipe', default=True)
-    cpuprocs_parser.set_defaults(func=cpuprocsProxy)
-
-    mpstats_parser = subparsers.add_parser('mpstats')
-    mpstats_parser.add_argument('--pipe', default=True)
-    mpstats_parser.set_defaults(func=mpstatsProxy)
-
-    test_parser = subparsers.add_parser('test')
-    test_parser.add_argument('--pipe', default=True)
-    test_parser.set_defaults(func=testProxy)
+    parser.add_argument('--all', action='store_true')
+    parser.add_argument('--mod', choices=MODS.keys())
+    parser.add_argument('--key')
+    parser.add_argument('--loc')
 
     args = parser.parse_args()
-    if 'func' in vars(args):
-        return args
+    if vars(args)['mod'] or vars(args)['all']:
+        asyncRunner(proxyRunner, args)
     else:
         parser.print_help()
 
 
-def setup():
-    logConfig()
-    args = parseArgs()
-    args.func(args)
-
-
 if __name__ == '__main__':
-    setup()
+    parseArgs()

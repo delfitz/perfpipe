@@ -73,7 +73,7 @@ async def lineFormatter(hostInfo, data):
     return f'{stats} {mpSparkline}'
 
 
-async def runner(pipe):
+async def runner(pipe, **kwargs):
     try:
         hostInfo = await getHostInfo()
         await processRunner(pipe, STATS_CMD, STATS_COLS,
