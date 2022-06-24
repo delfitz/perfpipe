@@ -1,11 +1,13 @@
-import logging
-
 import utils.base16Colors as bfc
 from utils.sparkUtils import getHighlight
 
-HL_LABEL = bfc.BASE03
-HL_LABEL_SUB = bfc.BASE01
+HL_LABEL = bfc.BASE04
+HL_LABEL_SUB = bfc.BASE03
 HL_ICON = bfc.BASE04
+
+TEXT_SMALL = 1
+TEXT_MEDIUM = 2
+TEXT_LARGE = 3
 
 ICON_SMALL = 6
 ICON_MEDIUM = 7
@@ -23,11 +25,10 @@ def getIcon(icon, size=ICON_MEDIUM, theme=None):
 
 
 def formatLabel(label, sub=False, icon=None, theme=None):
-    if sub:
-        return f'<fn=1><fc={getColor(HL_LABEL_SUB, theme)}>{label}</fc></fn>'
-    else:
-        iconLabel = getIcon(icon, theme=theme) if icon else ''
-        return f'<fn=3><fc={getColor(HL_LABEL, theme)}>{iconLabel} {label}</fc></fn>'
+    iconLabel = getIcon(icon, theme=theme) + ' ' if icon else ''
+    size, color = (TEXT_SMALL, HL_LABEL_SUB) if sub else (TEXT_LARGE, HL_LABEL)
+    textLabel = f'<fn={size}><fc={getColor(color, theme)}>{label}</fc></fn>'
+    return f'{iconLabel}{textLabel}'
 
 
 def formatStat(level,
@@ -72,13 +73,3 @@ def formatWeather(temp,
     tempLabel = f'<fn={tempFont}><fc={getHighlight(temp, hl_splits, theme)}>{tempUnit}</fc></fn>'
     iconLabel = f'<fn={iconFont}><fc={getColor(HL_ICON, theme)}>{icon}</fc></fn>'
     return f'{tempLabel}{iconLabel}{hourLabel}'
-
-
-def getBox(label, theme=bfc.PALENIGHT):
-    b = 3
-    m = 1
-    border = f'type=Left width={b}'
-    margins = f'offset=C20 ml={m}'
-    color = f'color={getColor(bfc.BASE01)}'
-    padded = f' {label} '
-    return f'<box {border} {margins} {color}>{padded}</box>  '

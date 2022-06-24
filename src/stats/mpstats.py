@@ -30,6 +30,7 @@ HOST_ICON = ''
 CPU_ICON = ''
 MEM_ICON = ''
 SEN_ICON = ''
+CORE_ICON = ''
 
 
 async def getHostInfo():
@@ -68,7 +69,8 @@ async def lineFormatter(hostInfo, data):
     allCpuLabel = formatStat(cpus[0], icon=CPU_ICON)
     memLabel = await getMemInfo()
     sensorLabel = await getSensors()
-    stats = f'{hostIcon}   {hostInfo}  {allCpuLabel}  {memLabel}  {sensorLabel}'
+    coreLabel = formatLabel(str(len(cpus) - 1), icon=CORE_ICON, sub=True)
+    stats = f'{hostIcon}   {hostInfo}  {allCpuLabel}  {memLabel}  {sensorLabel}  {coreLabel}'
     mpSparkline = getSparkline(cpus[1:])
     return f'{stats} {mpSparkline}'
 
